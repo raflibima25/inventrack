@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ShieldCheck, AlertTriangle } from "lucide-react";
+import { PhotoCarousel } from "@/components/shared/photo-carousel";
 
 export default async function VerifyPage({
   params,
@@ -84,17 +85,8 @@ export default async function VerifyPage({
       </div>
 
       <div className="mx-auto max-w-lg space-y-4 p-4">
-        {/* Photo */}
-        {asset.photos.length > 0 && (
-          <div className="overflow-hidden rounded-xl">
-            <img
-              src={asset.photos[0].filePath}
-              alt={asset.name}
-              className="w-full object-cover"
-              style={{ maxHeight: 300 }}
-            />
-          </div>
-        )}
+        {/* Photos Carousel */}
+        <PhotoCarousel photos={asset.photos} assetName={asset.name} />
 
         {/* Main Info */}
         <Card>
