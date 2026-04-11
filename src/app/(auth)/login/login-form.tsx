@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Eye, EyeOff, Package } from "lucide-react";
+import Image from "next/image";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
@@ -71,7 +72,7 @@ export function LoginForm({ appName, appDescription, logoUrl }: LoginFormProps) 
           {/* Logo Icon */}
           <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-theme-lg overflow-hidden">
             {logoUrl ? (
-              <img src={logoUrl} alt={appName} className="h-14 w-14 object-contain" />
+              <Image src={logoUrl} alt={appName} width={56} height={56} className="h-14 w-14 object-contain" unoptimized />
             ) : (
               <Package className="h-10 w-10 text-white" />
             )}
@@ -107,7 +108,7 @@ export function LoginForm({ appName, appDescription, logoUrl }: LoginFormProps) 
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 shadow-theme-sm overflow-hidden">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={appName} className="h-7 w-7 object-contain" />
+                  <Image src={logoUrl} alt={appName} width={28} height={28} className="h-7 w-7 object-contain" unoptimized />
                 ) : (
                   <Package className="h-5 w-5 text-white" />
                 )}

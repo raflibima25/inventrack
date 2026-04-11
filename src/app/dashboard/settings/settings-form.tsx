@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Upload, X } from "lucide-react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,11 +182,13 @@ export function SettingsForm({ settings }: Props) {
             <div className="flex flex-col items-center gap-4">
               {logoPreview ? (
                 <div className="relative">
-                  <div className="h-32 w-32 overflow-hidden rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-                    <img
+                  <div className="relative h-32 w-32 overflow-hidden rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <Image
                       src={logoPreview}
                       alt="Logo"
-                      className="h-full w-full object-contain p-2"
+                      fill
+                      className="object-contain p-2"
+                      unoptimized
                     />
                   </div>
                   <button

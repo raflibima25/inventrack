@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { getAppSettings } from "@/actions/settings";
 import { AssetDetail } from "./asset-detail";
 
 export default async function AssetDetailPage({
@@ -30,11 +31,13 @@ export default async function AssetDetailPage({
   if (!asset || asset.deletedAt) notFound();
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const settings = await getAppSettings();
 
   return (
     <AssetDetail
       asset={JSON.parse(JSON.stringify(asset))}
       appUrl={appUrl}
+      appName={settings.appName}
       isAdmin={user.role === "ADMIN"}
     />
   );

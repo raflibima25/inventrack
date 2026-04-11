@@ -338,55 +338,43 @@
 /* =============================================
    PRINT STYLES — Detail Aset
    ============================================= */
+
+/* Hide print-area in normal view */
+#print-area {
+  display: none;
+}
+
 @media print {
-  /* Force light background for print */
-  html, body {
-    background: white !important;
-    color: black !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  /* ── Page setup ── */
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
   }
 
-  /* Hide sidebar, header, and action buttons */
-  aside,
-  nav,
-  header,
-  [data-print-hide] {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* ── Hide ALL body children EXCEPT print-area ──
+     Because #print-area is a direct body child (via React portal),
+     this cleanly removes all other content from layout.
+     No blank pages from invisible-but-space-consuming elements.
+  ── */
+  body > *:not(#print-area) {
     display: none !important;
   }
 
-  /* Make main content full width */
-  main,
-  [role="main"] {
-    margin: 0 !important;
-    padding: 0 !important;
+  /* ── Show and style print-area ── */
+  #print-area {
+    display: block !important;
     width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-  }
-
-  /* Remove overflow hidden from layout containers */
-  .flex.h-screen.overflow-hidden {
-    overflow: visible !important;
     height: auto !important;
-  }
-
-  /* Cards: remove shadow/border for cleaner print */
-  [class*="rounded-2xl"],
-  [class*="rounded-xl"],
-  [class*="rounded-lg"] {
-    box-shadow: none !important;
-  }
-
-  /* Ensure images print */
-  img {
-    max-width: 100% !important;
-    page-break-inside: avoid;
-  }
-
-  /* Prevent page break inside cards */
-  [class*="CardContent"],
-  .space-y-6 > div {
-    page-break-inside: avoid;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
+
+

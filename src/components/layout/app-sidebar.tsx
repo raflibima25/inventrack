@@ -149,10 +149,13 @@ export function AppSidebar({ user, appName = "InvenTrack", logoUrl }: AppSidebar
           <Link href="/dashboard" className="flex items-center gap-2.5">
             {logoUrl ? (
               <>
-                <img
+                <Image
                   src={logoUrl}
                   alt={appName}
+                  width={32}
+                  height={32}
                   className="h-8 w-8 object-contain flex-shrink-0"
+                  unoptimized
                 />
                 {isVisible && (
                   <span className="text-lg font-bold text-gray-900 dark:text-white truncate">

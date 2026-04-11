@@ -24,15 +24,16 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 print:block print:h-auto print:overflow-visible print:bg-white">
         <AppSidebar
           user={user}
           appName={settings.appName}
           logoUrl={settings.logoUrl}
+          data-print-hide
         />
         <MainContent>
-          <AppHeader user={user} />
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+          <AppHeader user={user} data-print-hide />
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 print:overflow-visible print:p-0">{children}</main>
         </MainContent>
       </div>
     </SidebarProvider>

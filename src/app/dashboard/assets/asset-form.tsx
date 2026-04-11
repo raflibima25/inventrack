@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, Upload, X, ImageIcon, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { assetSchema, type AssetFormData } from "@/lib/validations/asset";
 import { createAsset, updateAsset, uploadAssetPhotos } from "@/actions/assets";
-import { extractAssetFromImage, type ExtractedAssetData } from "@/actions/extract";
+import { extractAssetFromImage } from "@/actions/extract";
 
 type MasterItem = { id: string; name: string };
 type CategoryItem = MasterItem & { codePrefix: string };
@@ -589,10 +590,12 @@ export function AssetForm({
                   key={photo.id}
                   className="relative aspect-square overflow-hidden rounded-lg border"
                 >
-                  <img
+                  <Image
                     src={photo.filePath}
                     alt={photo.fileName}
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 </div>
               ))}
@@ -619,10 +622,12 @@ export function AssetForm({
                   key={i}
                   className="relative aspect-square overflow-hidden rounded-lg border"
                 >
-                  <img
+                  <Image
                     src={p.url}
                     alt={p.file.name}
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                   <button
                     type="button"

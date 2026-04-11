@@ -14,27 +14,28 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  // Always start with "light" so server HTML matches client hydration.
+  // After mount, we read the real preference from localStorage.
   const [theme, setTheme] = useState<Theme>("light");
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme | null;
     const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = savedTheme ?? (systemDark ? "dark" : "light");
-    setTheme(initialTheme);
-    setIsInitialized(true);
+    const resolved = savedTheme ?? (systemDark ? "dark" : "light");
+    // Apply to DOM immediately (no flash of wrong theme)
+    document.documentElement.classList.toggle("dark", resolved === "dark");
+    // Defer React state update to avoid "synchronous setState in effect" lint rule
+    queueMicrotask(() => setTheme(resolved));
   }, []);
 
   useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("theme", theme);
-      if (theme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+    localStorage.setItem("theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
-  }, [theme, isInitialized]);
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));

@@ -23,6 +23,7 @@ export function PhotoCarousel({ photos, assetName }: Props) {
   if (photos.length === 1) {
     return (
       <div className="overflow-hidden rounded-xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photos[0].filePath}
           alt={assetName}
@@ -71,6 +72,7 @@ export function PhotoCarousel({ photos, assetName }: Props) {
               width: "100%",
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={photo.filePath}
               alt={`${assetName} foto ${i + 1}`}
