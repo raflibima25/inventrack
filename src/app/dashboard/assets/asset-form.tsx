@@ -536,10 +536,10 @@ export function AssetForm({
                       : undefined}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)] w-max max-w-sm">
                   <SelectItem value="">-</SelectItem>
                   {locations.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
+                    <SelectItem key={l.id} value={l.id} className="whitespace-normal break-words">
                       {l.name}
                       {l.building ? ` - ${l.building}` : ""}
                       {l.floor ? ` Lt.${l.floor}` : ""}
