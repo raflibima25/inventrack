@@ -45,9 +45,10 @@ type AppHeaderProps = {
     email?: string | null;
     role: string;
   };
+  appName?: string;
 };
 
-export function AppHeader({ user }: AppHeaderProps) {
+export function AppHeader({ user, appName = "InvenTrack" }: AppHeaderProps) {
   const pathname = usePathname();
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const { theme, toggleTheme } = useTheme();
@@ -98,7 +99,7 @@ export function AppHeader({ user }: AppHeaderProps) {
 
           {/* Page Title / Breadcrumb */}
           <div className="hidden sm:flex items-center gap-2">
-            <span className="text-gray-400 dark:text-gray-500 text-sm">InvenTrack</span>
+            <span className="text-gray-400 dark:text-gray-500 text-sm">{appName}</span>
             <span className="text-gray-300 dark:text-gray-700">/</span>
             <h1 className="text-sm font-semibold text-gray-800 dark:text-white/90">{title}</h1>
           </div>

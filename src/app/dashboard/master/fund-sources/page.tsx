@@ -5,7 +5,7 @@ export default async function FundSourcesPage() {
   const fundSources = await prisma.fundSource.findMany({
     orderBy: { name: "asc" },
     include: {
-      _count: { select: { assets: true } },
+      _count: { select: { assets: { where: { deletedAt: null } } } },
     },
   });
 

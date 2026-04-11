@@ -5,7 +5,7 @@ export default async function ConditionsPage() {
   const conditions = await prisma.condition.findMany({
     orderBy: { severityLevel: "asc" },
     include: {
-      _count: { select: { assets: true } },
+      _count: { select: { assets: { where: { deletedAt: null } } } },
     },
   });
 

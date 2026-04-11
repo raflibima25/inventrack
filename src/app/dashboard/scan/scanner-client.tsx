@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { lookupAssetByQrToken, lookupAssetByCode } from "@/actions/scan";
 
-export function ScannerClient() {
+export function ScannerClient({ appName = "InvenTrack" }: { appName?: string }) {
   const router = useRouter();
   const scannerRef = useRef<HTMLDivElement>(null);
   const html5QrRef = useRef<unknown>(null);
@@ -57,7 +57,7 @@ export function ScannerClient() {
         }
 
         if (!token) {
-          toast.error("QR Code tidak valid — bukan QR aset InvenTrack");
+          toast.error(`QR Code tidak valid — bukan QR aset ${appName}`);
           setProcessing(false);
           return;
         }

@@ -32,7 +32,7 @@ export default async function DashboardLayout({
           data-print-hide
         />
         <MainContent>
-          <AppHeader user={user} data-print-hide />
+          <AppHeader user={user} appName={settings.appName} data-print-hide />
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 print:overflow-visible print:p-0">{children}</main>
         </MainContent>
       </div>

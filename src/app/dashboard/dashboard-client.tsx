@@ -42,7 +42,7 @@ type Stats = {
 const cardStyle =
   "rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-dark p-5 shadow-theme-xs";
 
-export function DashboardClient({ stats }: { stats: Stats }) {
+export function DashboardClient({ stats, appName = "InvenTrack" }: { stats: Stats; appName?: string }) {
   const statCards = [
     {
       title: "Total Aset",
@@ -135,7 +135,7 @@ export function DashboardClient({ stats }: { stats: Stats }) {
             Dashboard
           </h2>
           <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-            Selamat datang di InvenTrack. Berikut ringkasan inventaris aset Anda.
+            Selamat datang di {appName}. Berikut ringkasan inventaris aset Anda.
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">

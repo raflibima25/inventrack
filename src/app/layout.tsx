@@ -3,6 +3,7 @@ import { Outfit, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { getAppSettings } from "@/actions/settings";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -17,10 +18,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "InvenTrack — Sistem Inventaris Aset",
-  description: "Sistem manajemen inventaris & pelabelan aset berbasis QR Code",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getAppSettings();
+  return {
+    title: `${settings.appName} — Sistem Inventaris Aset`,
+    description:
+      settings.appDescription ||
+      "Sistem manajemen inventaris & pelabelan aset berbasis QR Code",
+  };
+}
 
 export default function RootLayout({
   children,
