@@ -356,7 +356,7 @@ export function AssetForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="name">Nama Barang *</Label>
+              <Label htmlFor="name">Nama Barang <span className="text-destructive">*</span></Label>
               <Input id="name" className={fieldBorder("name")} {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive">
@@ -366,7 +366,7 @@ export function AssetForm({
             </div>
 
             <div className="space-y-2">
-              <Label>Kategori *</Label>
+              <Label>Kategori <span className="text-destructive">*</span></Label>
               <Select
                 value={form.watch("categoryId")}
                 onValueChange={(v) => form.setValue("categoryId", v ?? "")}
@@ -397,7 +397,7 @@ export function AssetForm({
             </div>
 
             <div className="space-y-2">
-              <Label>Kondisi *</Label>
+              <Label>Kondisi <span className="text-destructive">*</span></Label>
               <Select
                 value={form.watch("conditionId")}
                 onValueChange={(v) => form.setValue("conditionId", v ?? "")}
