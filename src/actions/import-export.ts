@@ -215,6 +215,7 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
 export async function exportAssets(filters?: {
   categoryId?: string;
   conditionId?: string;
+  yearPurchased?: number;
 }): Promise<ActionResult<string>> {
   try {
     await requireAdmin();
@@ -222,6 +223,7 @@ export async function exportAssets(filters?: {
     const where: Record<string, unknown> = { deletedAt: null };
     if (filters?.categoryId) where.categoryId = filters.categoryId;
     if (filters?.conditionId) where.conditionId = filters.conditionId;
+    if (filters?.yearPurchased) where.yearPurchased = filters.yearPurchased;
 
     const assets = await prisma.asset.findMany({
       where,

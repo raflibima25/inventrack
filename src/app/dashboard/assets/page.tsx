@@ -26,7 +26,7 @@ export default async function AssetsPage({
   if (params.locationId) where.locationId = params.locationId;
   if (params.year) where.yearPurchased = parseInt(params.year, 10);
 
-  const [assets, categories, conditions, fundSources, locations] =
+  const [assets, categories, conditions, fundSources, locations, yearRows] =
     await Promise.all([
       prisma.asset.findMany({
         where,
@@ -42,7 +42,15 @@ export default async function AssetsPage({
       prisma.condition.findMany({ orderBy: { severityLevel: "asc" } }),
       prisma.fundSource.findMany({ orderBy: { name: "asc" } }),
       prisma.location.findMany({ orderBy: { name: "asc" } }),
+      prisma.$queryRaw<{ year: number }[]>`
+        SELECT DISTINCT year_purchased AS year
+        FROM assets
+        WHERE deleted_at IS NULL AND year_purchased IS NOT NULL
+        ORDER BY year DESC
+      `,
     ]);
+
+  const years = yearRows.map((r) => r.year);
 
   return (
     <AssetsClient
@@ -51,6 +59,7 @@ export default async function AssetsPage({
       conditions={JSON.parse(JSON.stringify(conditions))}
       fundSources={JSON.parse(JSON.stringify(fundSources))}
       locations={JSON.parse(JSON.stringify(locations))}
+      years={years}
       filters={params}
       isAdmin={user.role === "ADMIN"}
     />

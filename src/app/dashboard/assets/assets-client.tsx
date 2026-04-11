@@ -28,6 +28,7 @@ type Props = {
   conditions: FilterOption[];
   fundSources: FilterOption[];
   locations: FilterOption[];
+  years: number[];
   filters: Record<string, string | undefined>;
   isAdmin: boolean;
 };
@@ -38,6 +39,7 @@ export function AssetsClient({
   conditions,
   fundSources,
   locations,
+  years,
   filters,
   isAdmin,
 }: Props) {
@@ -157,6 +159,22 @@ export function AssetsClient({
             {fundSources.map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.year ?? "all"}
+          onValueChange={(v) => updateFilter("year", v ?? "")}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Tahun Pembelian" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Tahun</SelectItem>
+            {years.map((y) => (
+              <SelectItem key={y} value={String(y)}>
+                {y}
               </SelectItem>
             ))}
           </SelectContent>

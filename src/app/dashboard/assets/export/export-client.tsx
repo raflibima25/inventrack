@@ -20,20 +20,24 @@ type FilterOption = { id: string; name: string };
 export function ExportClient({
   categories,
   conditions,
+  years,
 }: {
   categories: FilterOption[];
   conditions: FilterOption[];
+  years: number[];
 }) {
   const [categoryId, setCategoryId] = useState("");
   const [conditionId, setConditionId] = useState("");
+  const [yearPurchased, setYearPurchased] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
   async function handleExport() {
     setIsExporting(true);
     try {
-      const filters: { categoryId?: string; conditionId?: string } = {};
+      const filters: { categoryId?: string; conditionId?: string; yearPurchased?: number } = {};
       if (categoryId) filters.categoryId = categoryId;
       if (conditionId) filters.conditionId = conditionId;
+      if (yearPurchased) filters.yearPurchased = parseInt(yearPurchased, 10);
 
       const res = await exportAssets(filters);
       if (!res.success || !res.data) {
@@ -81,7 +85,7 @@ export function ExportClient({
           Filter (Opsional)
         </h2>
 
-        <div className="grid gap-4 sm:grid-cols-2 mb-6">
+        <div className="grid gap-4 sm:grid-cols-3 mb-6">
           <div className="space-y-2">
             <Label>Kategori</Label>
             <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
@@ -113,9 +117,25 @@ export function ExportClient({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label>Tahun Pembelian</Label>
+            <Select value={yearPurchased} onValueChange={(v) => setYearPurchased(v ?? "")}>
+              <SelectTrigger>
+                <SelectValue placeholder="Semua tahun" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {(categoryId || conditionId) && (
+        {(categoryId || conditionId || yearPurchased) && (
           <div className="mb-4">
             <Button
               variant="ghost"
@@ -123,6 +143,7 @@ export function ExportClient({
               onClick={() => {
                 setCategoryId("");
                 setConditionId("");
+                setYearPurchased("");
               }}
             >
               Reset Filter
@@ -137,7 +158,7 @@ export function ExportClient({
               Export ke Excel
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {categoryId || conditionId
+              {categoryId || conditionId || yearPurchased
                 ? "Data akan difilter sesuai pilihan di atas"
                 : "Semua data aset aktif akan diekspor"}
             </p>
