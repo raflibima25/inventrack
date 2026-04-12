@@ -10,19 +10,22 @@ type ActionResult<T = unknown> = {
   error?: string;
 };
 
-export async function getAppSettings() {
-  let settings = await prisma.appSetting.findFirst();
+// Fixed singleton ID — ensures there is always exactly one settings row.
+const SETTINGS_ID = "00000000-0000-0000-0000-000000000001";
 
-  if (!settings) {
-    settings = await prisma.appSetting.create({
-      data: {
-        appName: "InvenTrack",
-        institutionName: "Instansi",
-        appDescription:
-          "Sistem manajemen inventaris & pelabelan aset berbasis QR Code yang terintegrasi dan mudah digunakan.",
-      },
-    });
-  }
+const DEFAULT_SETTINGS = {
+  appName: "InvenTrack",
+  institutionName: "Instansi",
+  appDescription:
+    "Sistem manajemen inventaris & pelabelan aset berbasis QR Code yang terintegrasi dan mudah digunakan.",
+};
+
+export async function getAppSettings() {
+  const settings = await prisma.appSetting.upsert({
+    where: { id: SETTINGS_ID },
+    create: { id: SETTINGS_ID, ...DEFAULT_SETTINGS },
+    update: {},
+  });
 
   return settings;
 }
@@ -42,28 +45,22 @@ export async function updateAppSettings(
       return { success: false, error: "Nama aplikasi dan nama instansi wajib diisi." };
     }
 
-    const settings = await prisma.appSetting.findFirst();
-
-    if (settings) {
-      await prisma.appSetting.update({
-        where: { id: settings.id },
-        data: {
-          appName,
-          institutionName,
-          appDescription: appDescription || null,
-          ...(logoUrl !== null && { logoUrl }),
-        },
-      });
-    } else {
-      await prisma.appSetting.create({
-        data: {
-          appName,
-          institutionName,
-          appDescription: appDescription || null,
-          logoUrl: logoUrl || null,
-        },
-      });
-    }
+    await prisma.appSetting.upsert({
+      where: { id: SETTINGS_ID },
+      create: {
+        id: SETTINGS_ID,
+        appName,
+        institutionName,
+        appDescription: appDescription || null,
+        logoUrl: logoUrl || null,
+      },
+      update: {
+        appName,
+        institutionName,
+        appDescription: appDescription || null,
+        ...(logoUrl !== null && { logoUrl }),
+      },
+    });
 
     revalidatePath("/", "layout");
 
@@ -80,14 +77,10 @@ export async function updateAppLogo(logoUrl: string): Promise<ActionResult> {
   try {
     await requireAdmin();
 
-    const settings = await prisma.appSetting.findFirst();
-    if (!settings) {
-      return { success: false, error: "Pengaturan belum diinisialisasi." };
-    }
-
-    await prisma.appSetting.update({
-      where: { id: settings.id },
-      data: { logoUrl },
+    await prisma.appSetting.upsert({
+      where: { id: SETTINGS_ID },
+      create: { id: SETTINGS_ID, ...DEFAULT_SETTINGS, logoUrl },
+      update: { logoUrl },
     });
 
     revalidatePath("/", "layout");
@@ -105,14 +98,10 @@ export async function removeAppLogo(): Promise<ActionResult> {
   try {
     await requireAdmin();
 
-    const settings = await prisma.appSetting.findFirst();
-    if (!settings) {
-      return { success: false, error: "Pengaturan belum diinisialisasi." };
-    }
-
-    await prisma.appSetting.update({
-      where: { id: settings.id },
-      data: { logoUrl: null },
+    await prisma.appSetting.upsert({
+      where: { id: SETTINGS_ID },
+      create: { id: SETTINGS_ID, ...DEFAULT_SETTINGS, logoUrl: null },
+      update: { logoUrl: null },
     });
 
     revalidatePath("/", "layout");
