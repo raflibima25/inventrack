@@ -9,9 +9,9 @@ export async function GET() {
     const settings = await getAppSettings();
 
     if (settings.logoUrl) {
-      // Proxy the image from Supabase — avoids CORS & browser favicon restrictions
+      // Proxy the image from MinIO — avoids CORS & browser favicon restrictions
       const imageRes = await fetch(settings.logoUrl, {
-        next: { revalidate: 3600 }, // re-fetch from Supabase at most once per hour
+        next: { revalidate: 3600 }, // re-fetch from MinIO at most once per hour
       });
 
       if (imageRes.ok) {

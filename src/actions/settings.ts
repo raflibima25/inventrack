@@ -17,8 +17,7 @@ export async function getAppSettings() {
     settings = await prisma.appSetting.create({
       data: {
         appName: "InvenTrack",
-        institutionName:
-          process.env.NEXT_PUBLIC_INSTITUTION_NAME || "Instansi",
+        institutionName: "Instansi",
         appDescription:
           "Sistem manajemen inventaris & pelabelan aset berbasis QR Code yang terintegrasi dan mudah digunakan.",
       },

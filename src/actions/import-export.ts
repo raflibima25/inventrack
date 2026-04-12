@@ -57,18 +57,55 @@ async function generateAssetCode(categoryId: string): Promise<string> {
   return `${prefix}-${String(sequence).padStart(3, "0")}`;
 }
 
+/** Extract a cell value from an ExcelJS row by matching against multiple header aliases. */
+function getCell(
+  row: Record<string, unknown>,
+  ...keys: string[]
+): string | undefined {
+  for (const key of keys) {
+    const val = row[key];
+    if (val !== undefined && val !== null && String(val).trim() !== "") {
+      return String(val).trim();
+    }
+  }
+  return undefined;
+}
+
 export async function importAssets(formData: FormData): Promise<ActionResult<ImportResult>> {
   try {
     const user = await requireAdmin();
     const file = formData.get("file") as File | null;
     if (!file) return { success: false, error: "File wajib diunggah" };
 
-    const { read, utils } = await import("xlsx");
-
+    const ExcelJS = (await import("exceljs")).default;
+    const workbook = new ExcelJS.Workbook();
     const buffer = await file.arrayBuffer();
-    const workbook = read(buffer, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rawRows = utils.sheet_to_json<Record<string, unknown>>(sheet);
+    await workbook.xlsx.load(buffer);
+
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      return { success: false, error: "File kosong atau format tidak sesuai" };
+    }
+
+    // Read header row to build a column-name → column-index map
+    const headerRow = worksheet.getRow(1);
+    const headerMap: Record<string, number> = {};
+    headerRow.eachCell((cell, colNumber) => {
+      const headerVal = String(cell.value ?? "").trim();
+      if (headerVal) headerMap[headerVal.toLowerCase()] = colNumber;
+    });
+
+    // Convert all data rows (skip header) to plain objects keyed by header name
+    const rawRows: Record<string, unknown>[] = [];
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // skip header
+      const obj: Record<string, unknown> = {};
+      Object.entries(headerMap).forEach(([header, colIdx]) => {
+        const cell = row.getCell(colIdx);
+        obj[header] = cell.value;
+      });
+      rawRows.push(obj);
+    });
 
     if (rawRows.length === 0) {
       return { success: false, error: "File kosong atau format tidak sesuai" };
@@ -86,11 +123,11 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
       value: string | undefined
     ): T | undefined {
       if (!value) return undefined;
-      const lower = value.toString().toLowerCase().trim();
+      const lower = value.toLowerCase().trim();
       return list.find((item) => item.name.toLowerCase() === lower);
     }
 
-    // Check existing serial numbers
+    // Preload existing serial numbers
     const existingSerials = new Set(
       (
         await prisma.asset.findMany({
@@ -104,24 +141,23 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
     let successCount = 0;
 
     for (let i = 0; i < rawRows.length; i++) {
-      const rowNum = i + 2; // Excel row (1-indexed + header)
+      const rowNum = i + 2; // Excel row number (1-indexed + header)
       const raw = rawRows[i];
 
-      // Normalize keys to snake_case lowercase
       const row: ImportRow = {
-        nama_barang: String(raw["nama_barang"] ?? raw["Nama Barang"] ?? "").trim(),
-        kategori: String(raw["kategori"] ?? raw["Kategori"] ?? "").trim(),
-        merk: raw["merk"] ?? raw["Merk"] ? String(raw["merk"] ?? raw["Merk"]).trim() : undefined,
-        type_model: raw["type_model"] ?? raw["Type/Model"] ? String(raw["type_model"] ?? raw["Type/Model"]).trim() : undefined,
-        serial_number: raw["serial_number"] ?? raw["Serial Number"] ? String(raw["serial_number"] ?? raw["Serial Number"]).trim() : undefined,
-        tahun_barang: raw["tahun_barang"] ?? raw["Tahun Barang"] ? Number(raw["tahun_barang"] ?? raw["Tahun Barang"]) : undefined,
-        tahun_pembelian: raw["tahun_pembelian"] ?? raw["Tahun Pembelian"] ? Number(raw["tahun_pembelian"] ?? raw["Tahun Pembelian"]) : undefined,
-        sumber_dana: raw["sumber_dana"] ?? raw["Sumber Dana"] ? String(raw["sumber_dana"] ?? raw["Sumber Dana"]).trim() : undefined,
-        vendor: raw["vendor"] ?? raw["Vendor"] ? String(raw["vendor"] ?? raw["Vendor"]).trim() : undefined,
-        pengguna: raw["pengguna"] ?? raw["Pengguna"] ? String(raw["pengguna"] ?? raw["Pengguna"]).trim() : undefined,
-        jabatan: raw["jabatan"] ?? raw["Jabatan"] ? String(raw["jabatan"] ?? raw["Jabatan"]).trim() : undefined,
-        kondisi: String(raw["kondisi"] ?? raw["Kondisi"] ?? "").trim(),
-        keterangan: raw["keterangan"] ?? raw["Keterangan"] ? String(raw["keterangan"] ?? raw["Keterangan"]).trim() : undefined,
+        nama_barang: getCell(raw, "nama_barang", "nama barang") ?? "",
+        kategori:    getCell(raw, "kategori") ?? "",
+        merk:        getCell(raw, "merk"),
+        type_model:  getCell(raw, "type_model", "type/model"),
+        serial_number: getCell(raw, "serial_number", "serial number"),
+        tahun_barang:  getCell(raw, "tahun_barang", "tahun barang") ? Number(getCell(raw, "tahun_barang", "tahun barang")) : undefined,
+        tahun_pembelian: getCell(raw, "tahun_pembelian", "tahun pembelian") ? Number(getCell(raw, "tahun_pembelian", "tahun pembelian")) : undefined,
+        sumber_dana: getCell(raw, "sumber_dana", "sumber dana"),
+        vendor:      getCell(raw, "vendor"),
+        pengguna:    getCell(raw, "pengguna"),
+        jabatan:     getCell(raw, "jabatan"),
+        kondisi:     getCell(raw, "kondisi") ?? "",
+        keterangan:  getCell(raw, "keterangan"),
       };
 
       // Validate required fields
@@ -138,7 +174,6 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
         continue;
       }
 
-      // Match master data
       const category = matchMaster(categories, row.kategori);
       if (!category) {
         errors.push({ row: rowNum, message: `Kategori "${row.kategori}" tidak ditemukan` });
@@ -151,13 +186,14 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
         continue;
       }
 
-      const fundSource = row.sumber_dana ? matchMaster(fundSources, row.sumber_dana) : undefined;
+      const fundSource = row.sumber_dana
+        ? matchMaster(fundSources, row.sumber_dana)
+        : undefined;
       if (row.sumber_dana && !fundSource) {
         errors.push({ row: rowNum, message: `Sumber dana "${row.sumber_dana}" tidak ditemukan` });
         continue;
       }
 
-      // Check serial number uniqueness
       if (row.serial_number) {
         const snLower = row.serial_number.toLowerCase();
         if (existingSerials.has(snLower)) {
@@ -169,7 +205,6 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
 
       try {
         const assetCode = await generateAssetCode(category.id);
-
         await prisma.asset.create({
           data: {
             assetCode,
@@ -189,7 +224,6 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
             createdBy: user.id!,
           },
         });
-
         successCount++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Gagal menyimpan";
@@ -204,7 +238,7 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
         totalRows: rawRows.length,
         successCount,
         errorCount: errors.length,
-        errors: errors.slice(0, 50), // Limit error details
+        errors: errors.slice(0, 50),
       },
     };
   } catch {
@@ -236,40 +270,68 @@ export async function exportAssets(filters?: {
       orderBy: { assetCode: "asc" },
     });
 
-    const { utils, write } = await import("xlsx");
+    const ExcelJS = (await import("exceljs")).default;
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Aset");
 
-    const rows = assets.map((a) => ({
-      "Kode Aset": a.assetCode,
-      "Nama Barang": a.name,
-      Kategori: a.category.name,
-      Merk: a.brand || "",
-      "Type/Model": a.model || "",
-      "Serial Number": a.serialNumber || "",
-      "Tahun Barang": a.yearAcquired || "",
-      "Tahun Pembelian": a.yearPurchased || "",
-      "Sumber Dana": a.fundSource?.name || "",
-      Vendor: a.vendor || "",
-      Pengguna: a.userName || "",
-      Jabatan: a.userPosition || "",
-      Kondisi: a.condition.name,
-      Lokasi: a.location
+    // Define columns with headers and widths
+    const columns = [
+      { header: "Kode Aset",      key: "kodeAset",      width: 18 },
+      { header: "Nama Barang",    key: "namaBarang",    width: 30 },
+      { header: "Kategori",       key: "kategori",      width: 20 },
+      { header: "Merk",           key: "merk",          width: 18 },
+      { header: "Type/Model",     key: "typeModel",     width: 18 },
+      { header: "Serial Number",  key: "serialNumber",  width: 22 },
+      { header: "Tahun Barang",   key: "tahunBarang",   width: 14 },
+      { header: "Tahun Pembelian",key: "tahunPembelian",width: 16 },
+      { header: "Sumber Dana",    key: "sumberDana",    width: 18 },
+      { header: "Vendor",         key: "vendor",        width: 20 },
+      { header: "Pengguna",       key: "pengguna",      width: 22 },
+      { header: "Jabatan",        key: "jabatan",       width: 22 },
+      { header: "Kondisi",        key: "kondisi",       width: 16 },
+      { header: "Lokasi",         key: "lokasi",        width: 28 },
+      { header: "Keterangan",     key: "keterangan",    width: 30 },
+    ];
+    worksheet.columns = columns;
+
+    // Style the header row
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD9E1F2" },
+    };
+    headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
+    // Add data rows
+    for (const a of assets) {
+      const lokasi = a.location
         ? `${a.location.name}${a.location.building ? ` - ${a.location.building}` : ""}${a.location.floor ? ` Lt.${a.location.floor}` : ""}`
-        : "",
-      Keterangan: a.description || "",
-    }));
+        : "";
 
-    const ws = utils.json_to_sheet(rows);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Aset");
+      worksheet.addRow({
+        kodeAset:      a.assetCode,
+        namaBarang:    a.name,
+        kategori:      a.category.name,
+        merk:          a.brand ?? "",
+        typeModel:     a.model ?? "",
+        serialNumber:  a.serialNumber ?? "",
+        tahunBarang:   a.yearAcquired ?? "",
+        tahunPembelian: a.yearPurchased ?? "",
+        sumberDana:    a.fundSource?.name ?? "",
+        vendor:        a.vendor ?? "",
+        pengguna:      a.userName ?? "",
+        jabatan:       a.userPosition ?? "",
+        kondisi:       a.condition.name,
+        lokasi,
+        keterangan:    a.description ?? "",
+      });
+    }
 
-    // Auto column widths
-    const colWidths = Object.keys(rows[0] || {}).map((key) => ({
-      wch: Math.max(key.length, ...rows.map((r) => String(r[key as keyof typeof r] || "").length)).valueOf() + 2,
-    }));
-    ws["!cols"] = colWidths;
-
-    const buf = write(wb, { type: "base64", bookType: "xlsx" });
-    return { success: true, data: buf as string };
+    const buffer = await workbook.xlsx.writeBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    return { success: true, data: base64 };
   } catch {
     return { success: false, error: "Gagal mengekspor data" };
   }
@@ -279,32 +341,43 @@ export async function getExportTemplate(): Promise<ActionResult<string>> {
   try {
     await requireAdmin();
 
-    const { utils, write } = await import("xlsx");
+    const ExcelJS = (await import("exceljs")).default;
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Template");
 
-    const headers = [
-      {
-        nama_barang: "",
-        kategori: "",
-        merk: "",
-        type_model: "",
-        serial_number: "",
-        tahun_barang: "",
-        tahun_pembelian: "",
-        sumber_dana: "",
-        vendor: "",
-        pengguna: "",
-        jabatan: "",
-        kondisi: "",
-        keterangan: "",
-      },
+    const columns = [
+      { header: "nama_barang",     key: "nama_barang",     width: 30 },
+      { header: "kategori",        key: "kategori",        width: 20 },
+      { header: "merk",            key: "merk",            width: 18 },
+      { header: "type_model",      key: "type_model",      width: 18 },
+      { header: "serial_number",   key: "serial_number",   width: 22 },
+      { header: "tahun_barang",    key: "tahun_barang",    width: 14 },
+      { header: "tahun_pembelian", key: "tahun_pembelian", width: 16 },
+      { header: "sumber_dana",     key: "sumber_dana",     width: 18 },
+      { header: "vendor",          key: "vendor",          width: 20 },
+      { header: "pengguna",        key: "pengguna",        width: 22 },
+      { header: "jabatan",         key: "jabatan",         width: 22 },
+      { header: "kondisi",         key: "kondisi",         width: 16 },
+      { header: "keterangan",      key: "keterangan",      width: 30 },
     ];
+    worksheet.columns = columns;
 
-    const ws = utils.json_to_sheet(headers);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Template");
+    // Style header row
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD9E1F2" },
+    };
+    headerRow.alignment = { vertical: "middle", horizontal: "center" };
 
-    const buf = write(wb, { type: "base64", bookType: "xlsx" });
-    return { success: true, data: buf as string };
+    // Add one empty example row so Excel doesn't open to a blank sheet
+    worksheet.addRow({});
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    return { success: true, data: base64 };
   } catch {
     return { success: false, error: "Gagal membuat template" };
   }

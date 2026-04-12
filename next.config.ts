@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        // MinIO self-hosted — replace with your actual MinIO domain
+        protocol: "https",
+        hostname: process.env.MINIO_HOSTNAME || "storage.yourdomain.com",
+        pathname: "/**",
+      },
+      {
+        // Supabase — kept temporarily for backward-compat with old image URLs in DB
         protocol: "https",
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",

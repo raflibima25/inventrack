@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, requireAuth } from "@/lib/auth-guard";
 import { assetSchema, type AssetFormData } from "@/lib/validations/asset";
-import { uploadFile, deleteFile } from "@/lib/supabase-storage";
+import { uploadFile, deleteFile } from "@/lib/storage";
 
 type ActionResult<T = unknown> = {
   success: boolean;

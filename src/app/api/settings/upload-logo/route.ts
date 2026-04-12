@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { uploadFile } from "@/lib/supabase-storage";
+import { uploadFile } from "@/lib/storage";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const buffer = await file.arrayBuffer();
     const sanitizedName = `logo-${Date.now()}.${file.name.split(".").pop()}`;
-    const url = await uploadFile(buffer, sanitizedName, file.type);
+    const url = await uploadFile(buffer, sanitizedName, file.type, "logos");
 
     return NextResponse.json({ url });
   } catch (error) {
