@@ -3,6 +3,7 @@ import { Outfit, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthSessionProvider } from "@/components/providers/auth-session-provider";
 import { getAppSettings } from "@/actions/settings";
 import "./globals.css";
 
@@ -50,10 +51,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-outfit">
         <ThemeProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-          <Toaster richColors position="top-right" />
+          <AuthSessionProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+            <Toaster richColors position="top-right" />
+          </AuthSessionProvider>
         </ThemeProvider>
       </body>
     </html>
