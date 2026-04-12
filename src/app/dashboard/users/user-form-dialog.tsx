@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -40,7 +41,9 @@ type Props = {
 
 export function UserFormDialog({ open, onOpenChange, editData, onSuccess }: Props) {
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session, update: updateSession } = useSession();
   const isEdit = !!editData;
+  const isSelf = editData?.id === session?.user?.id;
 
   const form = useForm<UserCreateFormData | UserUpdateFormData>({
     resolver: zodResolver(isEdit ? userUpdateSchema : userCreateSchema),
@@ -71,6 +74,10 @@ export function UserFormDialog({ open, onOpenChange, editData, onSuccess }: Prop
 
       if (result.success) {
         toast.success(isEdit ? "Pengguna berhasil diperbarui" : "Pengguna berhasil ditambahkan");
+        // Refresh session token jika user mengedit datanya sendiri
+        if (isEdit && isSelf) {
+          await updateSession();
+        }
         onOpenChange(false);
         onSuccess();
       } else {

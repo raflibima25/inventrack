@@ -47,10 +47,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
         token.role = (user as { role: string }).role;
+      }
+      // Re-fetch fresh data from DB when session.update() is called from client
+      if (trigger === "update" && token.id) {
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, role: true },
+        });
+        if (freshUser) {
+          token.name = freshUser.name;
+          token.role = freshUser.role;
+        }
       }
       return token;
     },
