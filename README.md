@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InvenTrack
 
-## Getting Started
+InvenTrack is a modern web application built with [Next.js](https://nextjs.org/), Prisma CRM, and Tailwind CSS. It is designed to help you explicitly track, label, and manage your institution's assets and inventory efficiently.
 
-First, run the development server:
+---
+
+## 🛠️ Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- **Node.js**: Version **20.x** or **22.x** (LTS recommended).
+- **Package Manager**: npm.
+- **Database**: PostgreSQL (e.g., Supabase, local PostgreSQL, etc.).
+- **Storage**: MinIO (Self-hosted S3 compatible storage) for handling file uploads like images and logos.
+- **AI Integration**: Google Gemini API Key (required for AI image extraction features).
+
+---
+
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally for development.
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd inventrack
+```
+
+### 2. Install Dependencies
+
+Install the necessary Node packages using npm:
+
+```bash
+npm install
+```
+
+### 3. Environment Variables Configuration
+
+Copy the sample environment file to create your own configuration:
+
+```bash
+cp .env.example .env
+```
+
+Open the `.env` file and fill in required values. Key variables include:
+
+- `DATABASE_URL`: Your PostgreSQL connection string. _(Use port 5432 for standard use, or 6543 for serverless)._
+- `AUTH_SECRET`: Generate a secure key by running `npx auth secret`.
+- MinIO configuration variables: `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET_NAME`, etc.
+- `GEMINI_API_KEY`: Your Gemini AI API token for image extraction.
+- `NEXT_PUBLIC_APP_URL`: Set this to `http://localhost:3000` for local development.
+
+### 4. Database Setup & Migrations
+
+After configuring your database URL in `.env`, run the Prisma migration to build your database schema:
+
+```bash
+npm run db:migrate
+```
+
+_(Alternatively, you can use `npm run db:push` if you are rapidly prototyping and just want to sync the schema without migration files)._
+
+### 5. Data Seeding
+
+To populate your database with the necessary initial data (such as default users, roles, or settings):
+
+```bash
+npm run db:seed
+```
+
+### 6. Run the Development Server
+
+Start the application in development mode:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📜 Available Scripts
 
-## Learn More
+This project includes several helpful npm scripts:
 
-To learn more about Next.js, take a look at the following resources:
+| Command                     | Description                                                                |
+| :-------------------------- | :------------------------------------------------------------------------- |
+| `npm run dev`               | Starts the Next.js development server with hot-reload.                     |
+| `npm run build`             | Builds the Next.js application for production.                             |
+| `npm run start`             | Starts a Node.js server for the production build.                          |
+| `npm run lint`              | Runs ESLint to identify and fix code issues.                               |
+| `npm run db:generate`       | Generates the Prisma Client based on the schema.                           |
+| `npm run db:migrate`        | Applies database migrations (local dev).                                   |
+| `npm run db:migrate:deploy` | Applies existing migrations without recreating them (used for production). |
+| `npm run db:push`           | Pushes the schema state to the database directly.                          |
+| `npm run db:seed`           | Seeds the database with default data.                                      |
+| `npm run db:studio`         | Opens Prisma Studio (a visual database browser) at `localhost:5555`.       |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 💻 Tech Stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework**: [Next.js 15+ App Router](https://nextjs.org)
+- **Database ORM**: [Prisma](https://www.prisma.io/)
+- **UI Library**: [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Authentication**: [NextAuth.js v5 (beta)](https://authjs.dev/)
+- **Charts & Reporting**: [ApexCharts](https://apexcharts.com/), [React PDF](https://react-pdf.org/)

@@ -21,11 +21,33 @@ const DEFAULT_SETTINGS = {
 };
 
 export async function getAppSettings() {
-  const settings = await prisma.appSetting.upsert({
+  let settings = await prisma.appSetting.findUnique({
     where: { id: SETTINGS_ID },
-    create: { id: SETTINGS_ID, ...DEFAULT_SETTINGS },
-    update: {},
   });
+
+  if (!settings) {
+    try {
+      settings = await prisma.appSetting.create({
+        data: { id: SETTINGS_ID, ...DEFAULT_SETTINGS },
+      });
+    } catch (error: unknown) {
+      // Menangani race condition (P2002: Unique constraint failed)
+      // Jika request paralel menyebabkan create yang bersamaan
+      const isUniqueConstraint = 
+        typeof error === "object" && 
+        error !== null && 
+        "code" in error && 
+        (error as { code?: string }).code === "P2002";
+
+      if (isUniqueConstraint) {
+        settings = await prisma.appSetting.findUnique({
+          where: { id: SETTINGS_ID },
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
 
   return settings;
 }
