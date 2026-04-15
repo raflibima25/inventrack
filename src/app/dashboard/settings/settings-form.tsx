@@ -34,12 +34,15 @@ export function SettingsForm({ settings }: Props) {
   const [isDragOverLogo, setIsDragOverLogo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Controlled state — prevents Base UI "uncontrolled FieldControl" warning
+  const [appName, setAppName] = useState(settings.appName);
+  const [institutionName, setInstitutionName] = useState(settings.institutionName);
+  const [appDescription, setAppDescription] = useState(settings.appDescription ?? "");
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
-
     const formData = new FormData(e.currentTarget);
-
     const result = await updateAppSettings(formData);
     if (result.success) {
       toast.success("Pengaturan berhasil disimpan");
@@ -47,7 +50,6 @@ export function SettingsForm({ settings }: Props) {
     } else {
       toast.error(result.error);
     }
-
     setSaving(false);
   }
 
@@ -124,7 +126,8 @@ export function SettingsForm({ settings }: Props) {
                 <Input
                   id="appName"
                   name="appName"
-                  defaultValue={settings.appName}
+                  value={appName}
+                  onChange={(e) => setAppName(e.target.value)}
                   placeholder="Contoh: InvenTrack"
                   required
                 />
@@ -138,7 +141,8 @@ export function SettingsForm({ settings }: Props) {
                 <Input
                   id="institutionName"
                   name="institutionName"
-                  defaultValue={settings.institutionName}
+                  value={institutionName}
+                  onChange={(e) => setInstitutionName(e.target.value)}
                   placeholder="Contoh: Kementerian Kelautan dan Perikanan"
                   required
                 />
@@ -152,7 +156,8 @@ export function SettingsForm({ settings }: Props) {
                 <Textarea
                   id="appDescription"
                   name="appDescription"
-                  defaultValue={settings.appDescription || ""}
+                  value={appDescription}
+                  onChange={(e) => setAppDescription(e.target.value)}
                   placeholder="Contoh: Sistem manajemen inventaris & pelabelan aset berbasis QR Code"
                   rows={3}
                 />

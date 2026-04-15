@@ -18,6 +18,10 @@ export type AssetRow = {
   brand: string | null;
   yearPurchased: number | null;
   userName: string | null;
+  itemCode: string | null;
+  nup: string | null;
+  acquisitionValue: number | null;
+  depreciation: number | null;
   category: { name: string };
   condition: { name: string; severityLevel: number };
   fundSource: { name: string } | null;
@@ -48,7 +52,19 @@ export function getColumns(
         </Link>
       ),
     },
+    {
+      accessorKey: "itemCode",
+      header: "Kode Barang",
+      cell: ({ row }) => (
+        <span className="font-mono text-sm">{row.original.itemCode || "-"}</span>
+      ),
+    },
     { accessorKey: "name", header: "Nama Barang" },
+    {
+      accessorKey: "nup",
+      header: "NUP",
+      cell: ({ row }) => row.original.nup || "-",
+    },
     {
       accessorKey: "category.name",
       header: "Kategori",
@@ -124,3 +140,4 @@ export function getColumns(
 
   return cols;
 }
+

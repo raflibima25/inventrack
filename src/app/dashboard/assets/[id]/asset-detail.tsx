@@ -39,6 +39,10 @@ type AssetData = {
   userName: string | null;
   userPosition: string | null;
   description: string | null;
+  itemCode: string | null;
+  nup: string | null;
+  acquisitionValue: number | null;
+  depreciation: number | null;
   createdAt: string;
   updatedAt: string;
   category: { name: string; codePrefix: string };
@@ -121,7 +125,20 @@ export function AssetDetail({ asset, appUrl, appName, isAdmin }: Props) {
         .join(" - ")
     : null;
 
+  function formatRp(val: number | null | undefined): string | null {
+    if (val == null) return null;
+    return `Rp ${val.toLocaleString("id-ID")}`;
+  }
+
+  const nilaiPerolehan = asset.acquisitionValue ? Number(asset.acquisitionValue) : null;
+  const penyusutan = asset.depreciation ? Number(asset.depreciation) : null;
+  const nilaiBuku =
+    nilaiPerolehan != null && penyusutan != null ? nilaiPerolehan - penyusutan : null;
+
   const printInfoRows: [string, string | null | undefined][] = [
+    ["Kode Aset", asset.assetCode],
+    ["Kode Barang", asset.itemCode],
+    ["NUP", asset.nup],
     ["Kategori", asset.category.name],
     ["Merk", asset.brand],
     ["Type/Model", asset.model],
@@ -129,7 +146,10 @@ export function AssetDetail({ asset, appUrl, appName, isAdmin }: Props) {
     ["Kondisi", asset.condition.name],
     ["Tahun Barang", asset.yearAcquired?.toString()],
     ["Tahun Pembelian", asset.yearPurchased?.toString()],
-    ["Sumber Dana", asset.fundSource?.name],
+    ["Asal Perolehan", asset.fundSource?.name],
+    ["Nilai Perolehan", formatRp(nilaiPerolehan)],
+    ["Penyusutan", formatRp(penyusutan)],
+    ["Nilai Buku", formatRp(nilaiBuku)],
     ["Vendor", asset.vendor],
     ["Lokasi", locationText],
     ["Pengguna", asset.userName],
@@ -478,6 +498,8 @@ export function AssetDetail({ asset, appUrl, appName, isAdmin }: Props) {
               </CardHeader>
               <CardContent>
                 <dl className="divide-y">
+                  <InfoRow label="Kode Barang" value={asset.itemCode} />
+                  <InfoRow label="NUP" value={asset.nup} />
                   <InfoRow label="Kategori" value={asset.category.name} />
                   <InfoRow label="Merk" value={asset.brand} />
                   <InfoRow label="Type/Model" value={asset.model} />
@@ -485,7 +507,10 @@ export function AssetDetail({ asset, appUrl, appName, isAdmin }: Props) {
                   <InfoRow label="Kondisi" value={asset.condition.name} />
                   <InfoRow label="Tahun Barang" value={asset.yearAcquired?.toString()} />
                   <InfoRow label="Tahun Pembelian" value={asset.yearPurchased?.toString()} />
-                  <InfoRow label="Sumber Dana" value={asset.fundSource?.name} />
+                  <InfoRow label="Asal Perolehan" value={asset.fundSource?.name} />
+                  <InfoRow label="Nilai Perolehan" value={formatRp(nilaiPerolehan)} />
+                  <InfoRow label="Penyusutan" value={formatRp(penyusutan)} />
+                  <InfoRow label="Nilai Buku" value={formatRp(nilaiBuku)} />
                   <InfoRow label="Vendor" value={asset.vendor} />
                   <InfoRow label="Lokasi" value={locationText} />
                   <InfoRow label="Pengguna" value={asset.userName} />

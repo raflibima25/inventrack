@@ -86,6 +86,10 @@ export function AssetForm({
       locationId: "",
       conditionId: "",
       description: "",
+      itemCode: "",
+      nup: "",
+      acquisitionValue: "",
+      depreciation: "",
     },
   });
 
@@ -449,6 +453,35 @@ export function AssetForm({
 
       <Card>
         <CardContent className="pt-6 space-y-4">
+          <h3 className="font-semibold">Identifikasi & Registrasi</h3>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="itemCode">Kode Barang</Label>
+              <Input
+                id="itemCode"
+                placeholder="Contoh: 3100102003"
+                {...form.register("itemCode")}
+              />
+              <p className="text-xs text-muted-foreground">
+                Kode barang dari dokumen instansi (berbeda dengan kode aset sistem)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nup">NUP</Label>
+              <Input
+                id="nup"
+                placeholder="Nomor Urut Pendaftaran"
+                {...form.register("nup")}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6 space-y-4">
           <h3 className="font-semibold">Tahun & Sumber Dana</h3>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -574,6 +607,78 @@ export function AssetForm({
               rows={3}
               {...form.register("description")}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <h3 className="font-semibold">Informasi Finansial</h3>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="acquisitionValue">Nilai Perolehan</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                  Rp
+                </span>
+                <Input
+                  id="acquisitionValue"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  className="pl-9"
+                  {...form.register("acquisitionValue")}
+                />
+              </div>
+              {form.formState.errors.acquisitionValue && (
+                <p className="text-xs text-destructive">{form.formState.errors.acquisitionValue.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="depreciation">Penyusutan</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                  Rp
+                </span>
+                <Input
+                  id="depreciation"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  className="pl-9"
+                  {...form.register("depreciation")}
+                />
+              </div>
+              {form.formState.errors.depreciation && (
+                <p className="text-xs text-destructive">{form.formState.errors.depreciation.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Nilai Buku</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                  Rp
+                </span>
+                <Input
+                  readOnly
+                  tabIndex={-1}
+                  className="pl-9 bg-muted text-muted-foreground cursor-not-allowed"
+                  value={(() => {
+                    const acq = Number(form.watch("acquisitionValue") || 0);
+                    const dep = Number(form.watch("depreciation") || 0);
+                    if (!form.watch("acquisitionValue") && !form.watch("depreciation")) return "";
+                    return (acq - dep).toLocaleString("id-ID");
+                  })()}
+                  placeholder="Otomatis (Nilai Perolehan - Penyusutan)"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Kalkulasi otomatis</p>
+            </div>
           </div>
         </CardContent>
       </Card>

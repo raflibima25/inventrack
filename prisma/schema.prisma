@@ -113,9 +113,13 @@ model Asset {
   userName      String?   @map("user_name") @db.VarChar(100)
   userPosition  String?   @map("user_position") @db.VarChar(100)
   locationId    String?   @map("location_id") @db.Uuid
-  conditionId   String    @map("condition_id") @db.Uuid
-  description   String?   @db.Text
-  createdBy     String    @map("created_by") @db.Uuid
+  conditionId      String    @map("condition_id") @db.Uuid
+  description      String?   @db.Text
+  itemCode         String?   @map("item_code") @db.VarChar(50)
+  nup              String?   @db.VarChar(50)
+  acquisitionValue Decimal?  @map("acquisition_value") @db.Decimal(15, 2)
+  depreciation     Decimal?  @db.Decimal(15, 2)
+  createdBy        String    @map("created_by") @db.Uuid
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")

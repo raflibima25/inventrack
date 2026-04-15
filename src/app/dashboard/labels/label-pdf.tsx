@@ -13,10 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
-// Label: 6cm x 4cm landscape, A4 grid: 3 cols x 4 rows (with margins)
-const LABEL_W = 170; // ~6cm in points
-const LABEL_H = 113; // ~4cm in points
-const COLS = 3;
+// Label: landscape ~10cm x 5cm
+const LABEL_W = 283; // ~10cm in points
+const LABEL_H = 142; // ~5cm in points
+const COLS = 2;
 const ROWS = 4;
 
 const styles = StyleSheet.create({
@@ -29,33 +29,71 @@ const styles = StyleSheet.create({
   label: {
     width: LABEL_W,
     height: LABEL_H,
-    border: "1pt solid #ccc",
-    borderRadius: 4,
+    border: "1.5pt solid #222",
+    borderRadius: 3,
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+  // --- Header row ---
+  header: {
     flexDirection: "row",
-    padding: 6,
-    gap: 6,
+    alignItems: "center",
+    borderBottom: "1pt solid #222",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    minHeight: 44,
   },
-  qr: {
-    width: 80,
-    height: 80,
+  logoBox: {
+    width: 36,
+    height: 36,
+    marginRight: 8,
+    flexShrink: 0,
   },
-  info: {
+  logoImage: {
+    width: 36,
+    height: 36,
+    objectFit: "contain",
+  },
+  institutionName: {
+    flex: 1,
+    fontSize: 9,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    textAlign: "center",
+    lineHeight: 1.3,
+  },
+  // --- Content row ---
+  content: {
+    flexDirection: "row",
+    flex: 1,
+    padding: 8,
+    gap: 8,
+  },
+  infoSection: {
     flex: 1,
     justifyContent: "center",
-    gap: 2,
+    gap: 4,
   },
-  institution: {
-    fontSize: 6,
-    color: "#666",
-    marginBottom: 2,
-  },
-  code: {
-    fontSize: 8,
+  fieldLabel: {
+    fontSize: 7.5,
     fontWeight: "bold",
+    color: "#111",
+    marginBottom: 0,
   },
-  name: {
-    fontSize: 7,
+  fieldValue: {
+    fontSize: 9,
     color: "#333",
+    marginBottom: 4,
+  },
+  qrBox: {
+    width: 88,
+    height: 88,
+    flexShrink: 0,
+    alignSelf: "center",
+  },
+  qrImage: {
+    width: 88,
+    height: 88,
   },
 });
 
@@ -63,15 +101,17 @@ type AssetLabel = {
   id: string;
   assetCode: string;
   name: string;
+  yearPurchased: number | null;
 };
 
 type Props = {
   assets: AssetLabel[];
   qrDataUrls: Record<string, string>;
   institutionName: string;
+  logoUrl?: string | null;
 };
 
-function LabelDocument({ assets, qrDataUrls, institutionName }: Props) {
+function LabelDocument({ assets, qrDataUrls, institutionName, logoUrl }: Props) {
   const pages: AssetLabel[][] = [];
   const perPage = COLS * ROWS;
 
@@ -85,17 +125,37 @@ function LabelDocument({ assets, qrDataUrls, institutionName }: Props) {
         <Page key={pi} size="A4" style={styles.page}>
           {pageAssets.map((asset) => (
             <View key={asset.id} style={styles.label}>
-              {qrDataUrls[asset.id] && (
-                <Image src={qrDataUrls[asset.id]} style={styles.qr} />
-              )}
-              <View style={styles.info}>
-                <Text style={styles.institution}>{institutionName}</Text>
-                <Text style={styles.code}>{asset.assetCode}</Text>
-                <Text style={styles.name}>
-                  {asset.name.length > 40
-                    ? asset.name.substring(0, 40) + "..."
-                    : asset.name}
-                </Text>
+              {/* ── Header ── */}
+              <View style={styles.header}>
+                {/* Logo (optional) */}
+                {logoUrl ? (
+                  <View style={styles.logoBox}>
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                    <Image src={logoUrl} style={styles.logoImage} />
+                  </View>
+                ) : null}
+                <Text style={styles.institutionName}>{institutionName}</Text>
+              </View>
+
+              {/* ── Content ── */}
+              <View style={styles.content}>
+                <View style={styles.infoSection}>
+                  <Text style={styles.fieldLabel}>No. Registrasi</Text>
+                  <Text style={styles.fieldValue}>{asset.assetCode}</Text>
+
+                  <Text style={styles.fieldLabel}>Tahun Perolehan</Text>
+                  <Text style={styles.fieldValue}>
+                    {asset.yearPurchased ? String(asset.yearPurchased) : "-"}
+                  </Text>
+                </View>
+
+                {/* QR Code */}
+                {qrDataUrls[asset.id] && (
+                  <View style={styles.qrBox}>
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                    <Image src={qrDataUrls[asset.id]} style={styles.qrImage} />
+                  </View>
+                )}
               </View>
             </View>
           ))}
@@ -106,12 +166,15 @@ function LabelDocument({ assets, qrDataUrls, institutionName }: Props) {
 }
 
 export function LabelPdfPreview(props: Props) {
+  // Use a stable filename — avoid calling Date.now() during render (React purity rule)
+  const fileName = `label-qr.pdf`;
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <PDFDownloadLink
           document={<LabelDocument {...props} />}
-          fileName={`label-qr-${Date.now()}.pdf`}
+          fileName={fileName}
         >
           {({ loading }) => (
             <Button variant="outline" disabled={loading}>

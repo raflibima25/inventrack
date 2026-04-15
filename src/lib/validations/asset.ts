@@ -15,6 +15,12 @@ export const assetSchema = z.object({
   locationId: z.string().uuid().optional().or(z.literal("")),
   conditionId: z.string().uuid("Kondisi wajib dipilih"),
   description: z.string().max(2000).optional().or(z.literal("")),
+  // New fields
+  itemCode: z.string().max(50).optional().or(z.literal("")),
+  nup: z.string().max(50).optional().or(z.literal("")),
+  acquisitionValue: z.coerce.number().nonnegative("Nilai tidak boleh negatif").optional().or(z.literal("")),
+  depreciation: z.coerce.number().nonnegative("Nilai tidak boleh negatif").optional().or(z.literal("")),
 });
 
 export type AssetFormData = z.infer<typeof assetSchema>;
+

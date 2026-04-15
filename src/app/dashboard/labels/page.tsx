@@ -14,6 +14,7 @@ export default async function LabelsPage() {
         assetCode: true,
         name: true,
         qrToken: true,
+        yearPurchased: true,
         category: { select: { name: true } },
       },
       orderBy: { assetCode: "asc" },
@@ -28,6 +29,8 @@ export default async function LabelsPage() {
       assets={JSON.parse(JSON.stringify(assets))}
       institutionName={settings.institutionName}
       appUrl={appUrl}
+      logoUrl={settings.logoUrl ?? null}
     />
   );
 }
+

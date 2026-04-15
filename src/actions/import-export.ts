@@ -13,6 +13,8 @@ type ActionResult<T = unknown> = {
 type ImportRow = {
   nama_barang: string;
   kategori: string;
+  kode_barang?: string;
+  nup?: string;
   merk?: string;
   type_model?: string;
   serial_number?: string;
@@ -24,6 +26,8 @@ type ImportRow = {
   jabatan?: string;
   kondisi: string;
   keterangan?: string;
+  nilai_perolehan?: number;
+  penyusutan?: number;
 };
 
 type ImportResult = {
@@ -147,17 +151,21 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
       const row: ImportRow = {
         nama_barang: getCell(raw, "nama_barang", "nama barang") ?? "",
         kategori:    getCell(raw, "kategori") ?? "",
+        kode_barang: getCell(raw, "kode_barang", "kode barang"),
+        nup:         getCell(raw, "nup"),
         merk:        getCell(raw, "merk"),
         type_model:  getCell(raw, "type_model", "type/model"),
         serial_number: getCell(raw, "serial_number", "serial number"),
         tahun_barang:  getCell(raw, "tahun_barang", "tahun barang") ? Number(getCell(raw, "tahun_barang", "tahun barang")) : undefined,
         tahun_pembelian: getCell(raw, "tahun_pembelian", "tahun pembelian") ? Number(getCell(raw, "tahun_pembelian", "tahun pembelian")) : undefined,
-        sumber_dana: getCell(raw, "sumber_dana", "sumber dana"),
+        sumber_dana: getCell(raw, "sumber_dana", "sumber dana", "asal perolehan"),
         vendor:      getCell(raw, "vendor"),
         pengguna:    getCell(raw, "pengguna"),
         jabatan:     getCell(raw, "jabatan"),
         kondisi:     getCell(raw, "kondisi") ?? "",
         keterangan:  getCell(raw, "keterangan"),
+        nilai_perolehan: getCell(raw, "nilai_perolehan", "nilai perolehan") ? Number(getCell(raw, "nilai_perolehan", "nilai perolehan")) : undefined,
+        penyusutan:  getCell(raw, "penyusutan") ? Number(getCell(raw, "penyusutan")) : undefined,
       };
 
       // Validate required fields
@@ -221,6 +229,10 @@ export async function importAssets(formData: FormData): Promise<ActionResult<Imp
             userPosition: row.jabatan || null,
             conditionId: condition.id,
             description: row.keterangan || null,
+            itemCode: row.kode_barang || null,
+            nup: row.nup || null,
+            acquisitionValue: row.nilai_perolehan ?? null,
+            depreciation: row.penyusutan ?? null,
             createdBy: user.id!,
           },
         });
@@ -276,21 +288,26 @@ export async function exportAssets(filters?: {
 
     // Define columns with headers and widths
     const columns = [
-      { header: "Kode Aset",      key: "kodeAset",      width: 18 },
-      { header: "Nama Barang",    key: "namaBarang",    width: 30 },
-      { header: "Kategori",       key: "kategori",      width: 20 },
-      { header: "Merk",           key: "merk",          width: 18 },
-      { header: "Type/Model",     key: "typeModel",     width: 18 },
-      { header: "Serial Number",  key: "serialNumber",  width: 22 },
-      { header: "Tahun Barang",   key: "tahunBarang",   width: 14 },
-      { header: "Tahun Pembelian",key: "tahunPembelian",width: 16 },
-      { header: "Sumber Dana",    key: "sumberDana",    width: 18 },
-      { header: "Vendor",         key: "vendor",        width: 20 },
-      { header: "Pengguna",       key: "pengguna",      width: 22 },
-      { header: "Jabatan",        key: "jabatan",       width: 22 },
-      { header: "Kondisi",        key: "kondisi",       width: 16 },
-      { header: "Lokasi",         key: "lokasi",        width: 28 },
-      { header: "Keterangan",     key: "keterangan",    width: 30 },
+      { header: "Kode Aset",       key: "kodeAset",        width: 18 },
+      { header: "Kode Barang",     key: "kodeBarang",      width: 18 },
+      { header: "Nama Barang",     key: "namaBarang",      width: 30 },
+      { header: "NUP",             key: "nup",             width: 10 },
+      { header: "Kategori",        key: "kategori",        width: 20 },
+      { header: "Merk",            key: "merk",            width: 18 },
+      { header: "Type/Model",      key: "typeModel",       width: 18 },
+      { header: "Serial Number",   key: "serialNumber",   width: 22 },
+      { header: "Tahun Barang",    key: "tahunBarang",    width: 14 },
+      { header: "Asal Perolehan",  key: "asalPerolehan",  width: 18 },
+      { header: "Tahun Perolehan", key: "tahunPerolehan", width: 16 },
+      { header: "Nilai Perolehan", key: "nilaiPerolehan", width: 18 },
+      { header: "Penyusutan",      key: "penyusutan",     width: 18 },
+      { header: "Nilai Buku",      key: "nilaiBuku",      width: 18 },
+      { header: "Vendor",          key: "vendor",         width: 20 },
+      { header: "Pengguna",        key: "pengguna",       width: 22 },
+      { header: "Jabatan",         key: "jabatan",        width: 22 },
+      { header: "Kondisi",         key: "kondisi",        width: 16 },
+      { header: "Lokasi",          key: "lokasi",         width: 28 },
+      { header: "Keterangan",      key: "keterangan",     width: 30 },
     ];
     worksheet.columns = columns;
 
@@ -310,22 +327,31 @@ export async function exportAssets(filters?: {
         ? `${a.location.name}${a.location.building ? ` - ${a.location.building}` : ""}${a.location.floor ? ` Lt.${a.location.floor}` : ""}`
         : "";
 
+      const acqVal = a.acquisitionValue ? Number(a.acquisitionValue) : null;
+      const depVal = a.depreciation ? Number(a.depreciation) : null;
+      const bookVal = acqVal != null && depVal != null ? acqVal - depVal : null;
+
       worksheet.addRow({
-        kodeAset:      a.assetCode,
-        namaBarang:    a.name,
-        kategori:      a.category.name,
-        merk:          a.brand ?? "",
-        typeModel:     a.model ?? "",
-        serialNumber:  a.serialNumber ?? "",
-        tahunBarang:   a.yearAcquired ?? "",
-        tahunPembelian: a.yearPurchased ?? "",
-        sumberDana:    a.fundSource?.name ?? "",
-        vendor:        a.vendor ?? "",
-        pengguna:      a.userName ?? "",
-        jabatan:       a.userPosition ?? "",
-        kondisi:       a.condition.name,
+        kodeAset:       a.assetCode,
+        kodeBarang:     a.itemCode ?? "",
+        namaBarang:     a.name,
+        nup:            a.nup ?? "",
+        kategori:       a.category.name,
+        merk:           a.brand ?? "",
+        typeModel:      a.model ?? "",
+        serialNumber:   a.serialNumber ?? "",
+        tahunBarang:    a.yearAcquired ?? "",
+        asalPerolehan:  a.fundSource?.name ?? "",
+        tahunPerolehan: a.yearPurchased ?? "",
+        nilaiPerolehan: acqVal ?? "",
+        penyusutan:     depVal ?? "",
+        nilaiBuku:      bookVal ?? "",
+        vendor:         a.vendor ?? "",
+        pengguna:       a.userName ?? "",
+        jabatan:        a.userPosition ?? "",
+        kondisi:        a.condition.name,
         lokasi,
-        keterangan:    a.description ?? "",
+        keterangan:     a.description ?? "",
       });
     }
 
@@ -348,6 +374,8 @@ export async function getExportTemplate(): Promise<ActionResult<string>> {
     const columns = [
       { header: "nama_barang",     key: "nama_barang",     width: 30 },
       { header: "kategori",        key: "kategori",        width: 20 },
+      { header: "kode_barang",     key: "kode_barang",     width: 18 },
+      { header: "nup",             key: "nup",             width: 10 },
       { header: "merk",            key: "merk",            width: 18 },
       { header: "type_model",      key: "type_model",      width: 18 },
       { header: "serial_number",   key: "serial_number",   width: 22 },
@@ -359,6 +387,8 @@ export async function getExportTemplate(): Promise<ActionResult<string>> {
       { header: "jabatan",         key: "jabatan",         width: 22 },
       { header: "kondisi",         key: "kondisi",         width: 16 },
       { header: "keterangan",      key: "keterangan",      width: 30 },
+      { header: "nilai_perolehan", key: "nilai_perolehan", width: 18 },
+      { header: "penyusutan",      key: "penyusutan",      width: 18 },
     ];
     worksheet.columns = columns;
 

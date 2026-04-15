@@ -26,6 +26,7 @@ type AssetItem = {
   assetCode: string;
   name: string;
   qrToken: string;
+  yearPurchased: number | null;
   category: { name: string };
 };
 
@@ -33,9 +34,10 @@ type Props = {
   assets: AssetItem[];
   institutionName: string;
   appUrl: string;
+  logoUrl?: string | null;
 };
 
-export function LabelsClient({ assets, institutionName, appUrl }: Props) {
+export function LabelsClient({ assets, institutionName, appUrl, logoUrl }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -158,6 +160,7 @@ export function LabelsClient({ assets, institutionName, appUrl }: Props) {
             assets={selectedAssets}
             qrDataUrls={qrDataUrls}
             institutionName={institutionName}
+            logoUrl={logoUrl}
           />
         </div>
       )}

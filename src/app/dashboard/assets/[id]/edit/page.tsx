@@ -41,6 +41,10 @@ export default async function EditAssetPage({
     locationId: asset.locationId ?? "",
     conditionId: asset.conditionId,
     description: asset.description ?? "",
+    itemCode: asset.itemCode ?? "",
+    nup: asset.nup ?? "",
+    acquisitionValue: asset.acquisitionValue ? Number(asset.acquisitionValue) : ("" as const),
+    depreciation: asset.depreciation ? Number(asset.depreciation) : ("" as const),
   };
 
   return (

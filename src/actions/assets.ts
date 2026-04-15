@@ -64,6 +64,12 @@ function cleanOptionalInt(val: string | number | undefined): number | null {
   return isNaN(n) ? null : n;
 }
 
+function cleanOptionalDecimal(val: string | number | undefined): number | null {
+  if (val === undefined || val === "") return null;
+  const n = Number(val);
+  return isNaN(n) ? null : n;
+}
+
 export async function createAsset(
   formData: AssetFormData
 ): Promise<ActionResult<{ id: string; assetCode: string }>> {
@@ -109,6 +115,10 @@ export async function createAsset(
         locationId: cleanOptional(d.locationId),
         conditionId: d.conditionId,
         description: cleanOptional(d.description),
+        itemCode: cleanOptional(d.itemCode),
+        nup: cleanOptional(d.nup),
+        acquisitionValue: cleanOptionalDecimal(d.acquisitionValue),
+        depreciation: cleanOptionalDecimal(d.depreciation),
         createdBy: user.id!,
       },
     });
@@ -174,6 +184,10 @@ export async function updateAsset(
       locationId: cleanOptional(d.locationId),
       conditionId: d.conditionId,
       description: cleanOptional(d.description),
+      itemCode: cleanOptional(d.itemCode),
+      nup: cleanOptional(d.nup),
+      acquisitionValue: cleanOptionalDecimal(d.acquisitionValue),
+      depreciation: cleanOptionalDecimal(d.depreciation),
     };
 
     await prisma.asset.update({ where: { id }, data: updateData });

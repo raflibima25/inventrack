@@ -31,12 +31,11 @@ export async function getAppSettings() {
         data: { id: SETTINGS_ID, ...DEFAULT_SETTINGS },
       });
     } catch (error: unknown) {
-      // Menangani race condition (P2002: Unique constraint failed)
-      // Jika request paralel menyebabkan create yang bersamaan
-      const isUniqueConstraint = 
-        typeof error === "object" && 
-        error !== null && 
-        "code" in error && 
+      // Handle race condition (P2002: Unique constraint failed)
+      const isUniqueConstraint =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
         (error as { code?: string }).code === "P2002";
 
       if (isUniqueConstraint) {
@@ -47,6 +46,20 @@ export async function getAppSettings() {
         throw error;
       }
     }
+  }
+
+  // Ultimate fallback — should never be reached in practice, but satisfies TypeScript
+  // and guards against any unexpected DB edge cases.
+  if (!settings) {
+    return {
+      id: SETTINGS_ID,
+      appName: DEFAULT_SETTINGS.appName,
+      institutionName: DEFAULT_SETTINGS.institutionName,
+      appDescription: DEFAULT_SETTINGS.appDescription,
+      logoUrl: null as string | null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   return settings;
