@@ -7,6 +7,11 @@ import { AuthSessionProvider } from "@/components/providers/auth-session-provide
 import { getAppSettings } from "@/actions/settings";
 import "./globals.css";
 
+// App is inherently dynamic (auth-gated pages, DB-backed settings that admins can
+// change any time) — force-dynamic here skips static prerendering for every route,
+// so `next build` doesn't need a live DB connection to render pages like /login.
+export const dynamic = "force-dynamic";
+
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
@@ -20,12 +25,23 @@ const geistMono = Geist_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getAppSettings();
+  // Falls back to defaults if the DB isn't reachable — e.g. during `next build`,
+  // when Next prerenders static pages (like /_not-found) without a live DB connection.
+  let appName = "InvenTrack";
+  let appDescription =
+    "Sistem manajemen inventaris & pelabelan aset berbasis QR Code";
+
+  try {
+    const settings = await getAppSettings();
+    appName = settings.appName;
+    appDescription = settings.appDescription || appDescription;
+  } catch (error) {
+    console.warn("generateMetadata: failed to load app settings, using defaults.", error);
+  }
+
   return {
-    title: `${settings.appName} — Sistem Inventaris Aset`,
-    description:
-      settings.appDescription ||
-      "Sistem manajemen inventaris & pelabelan aset berbasis QR Code",
+    title: `${appName} — Sistem Inventaris Aset`,
+    description: appDescription,
     icons: {
       // /api/favicon proxies the uploaded logo from Supabase storage
       // Using a proxy route avoids CORS issues and browser favicon restrictions

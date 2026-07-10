@@ -81,6 +81,39 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 ---
 
+## 🐳 Running with Docker
+
+The app can run in Docker while Postgres and MinIO stay external (Supabase, VPS, etc.).
+
+### 1. Build the image
+
+`NEXT_PUBLIC_APP_URL` and `MINIO_HOSTNAME` are baked in at build time, so pass them as build args:
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_APP_URL=https://app.yourdomain.com \
+  --build-arg MINIO_HOSTNAME=storage.yourdomain.com \
+  -t inventrack .
+```
+
+### 2. Apply database migrations (once, or after schema changes)
+
+```bash
+docker run --rm --env-file .env inventrack npx prisma migrate deploy
+```
+
+### 3. Run the container
+
+```bash
+docker run -d -p 3000:3000 --env-file .env --name inventrack inventrack
+```
+
+Open [http://localhost:3000](http://localhost:3000). All other runtime secrets
+(`DATABASE_URL`, `AUTH_SECRET`, `MINIO_*`, `GEMINI_API_KEY`, ...) come from `.env` — see
+[Environment Variables Configuration](#3-environment-variables-configuration).
+
+---
+
 ## 📜 Available Scripts
 
 This project includes several helpful npm scripts:
